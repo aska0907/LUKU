@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Umeme wa Vyumba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F4; --card:#FFFFFF; --ink:#14213D; --muted:#5B6578; --line:#D5DAE1;
+  --lcd:#CFD8B4; --lcd-ink:#1D2814;
+  --red:#B3261E; --green:#1B6B43; --amber:#B26A00; --accent:#14213D; --accent-ink:#FFFFFF;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --paper:#0E1420; --card:#17202F; --ink:#E8ECF3; --muted:#9AA5B8; --line:#2A3447;
+    --red:#FF8A80; --green:#6FD3A0; --amber:#F2B84B; --accent:#E8ECF3; --accent-ink:#0E1420; }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.45}
+.shell{max-width:520px;margin:0 auto;padding:20px 16px 90px}
+h1{font-size:1.7rem;font-weight:800;margin:6px 0 2px;letter-spacing:-.01em}
+h2{font-size:1.25rem;font-weight:800;margin:14px 0 10px}
+h3{font-size:1rem;font-weight:600;margin:20px 0 8px}
+.muted{color:var(--muted);margin:0;font-size:.92rem}
+.view{margin-top:20px}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+.big{display:block;width:100%;text-align:left;border:2px solid var(--accent);background:var(--card);color:var(--ink);
+  border-radius:14px;padding:22px 18px;margin-bottom:14px;font:inherit;cursor:pointer}
+.big.primary{background:var(--accent);color:var(--accent-ink)}
+.big-t{display:block;font-size:1.45rem;font-weight:800}
+.big-s{display:block;font-size:.95rem;opacity:.85;margin-top:4px}
+
+.back{background:none;border:0;color:var(--muted);font:inherit;padding:6px 0;cursor:pointer}
+label{display:block;font-size:.9rem;font-weight:600;margin:12px 0 4px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:12px}
+.field-row{display:flex;gap:8px}
+.field-row input{flex:1}
+.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.small{padding:7px 12px;font-size:.85rem}
+.btn.danger{background:transparent;color:var(--red);border:1.5px solid var(--red)}
+.btn.wa{background:#1B7F4B;color:#fff;text-decoration:none;display:inline-block}
+.btn:disabled{opacity:.6}
+
+.lcd{background:var(--lcd);color:var(--lcd-ink);border-radius:12px;padding:16px 18px 14px;display:grid;grid-template-columns:1fr auto;align-items:end;gap:2px 10px;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.2),inset 0 8px 16px rgba(0,0,0,.12);
+  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0 1px,transparent 1px 3px)}
+.lcd-label{grid-column:1/-1;font-size:.9rem;font-weight:600}
+.lcd-value{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:clamp(2.5rem,13vw,3.5rem);line-height:1.05;word-break:break-all}
+.lcd-unit{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:1.1rem;padding-bottom:6px}
+.status{margin:10px 0 0;font-weight:600}
+.status::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:var(--green)}
+.status.deni{color:var(--red)} .status.deni::before{background:var(--red)}
+.status.low{color:var(--amber)} .status.low::before{background:var(--amber)}
+.status.ok{color:var(--green)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 14px;margin-top:14px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.kv b{font-weight:600;text-align:right}
+.notice{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--amber);border-radius:8px;padding:12px 14px;margin:14px 0}
+.empty{color:var(--muted);padding:10px 0}
+
+.list{list-style:none;margin:0;padding:0}
+.hist{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.95rem}
+.hist:last-child{border-bottom:0}
+.hist .d{color:var(--muted)}
+
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 4px}
+.sum div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
+.sum b{display:block;font-size:1.15rem}
+.sum span{font-size:.8rem;color:var(--muted)}
+
+.room{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--green);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.room.deni{border-left-color:var(--red)} .room.low{border-left-color:var(--amber)}
+.room-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.room-top strong{font-size:1.1rem}
+.room-bal{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:1.25rem}
+.room.deni .room-bal{color:var(--red)}
+.room-name{color:var(--muted);font-size:.92rem}
+.room-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.room-grid b{display:block;font-weight:600;font-size:.95rem}
+.room-grid span{font-size:.78rem;color:var(--muted)}
+.room-flag{font-size:.85rem;font-weight:600;margin-top:6px}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;padding:0 14px}
+.panel summary{cursor:pointer;font-weight:800;padding:14px 0;list-style:none}
+.panel summary::-webkit-details-marker{display:none}
+.panel summary::after{content:"+";float:right;font-weight:400}
+.panel[open] summary::after{content:"–"}
+.panel .body{padding:0 0 14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.rem:last-child{border-bottom:0}
+.rec{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.rec:last-child{border-bottom:0}
+
+.foot{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:10px;padding:10px;background:linear-gradient(to top,var(--paper) 60%,transparent)}
+.link{background:none;border:0;color:var(--muted);font:inherit;font-size:.9rem;text-decoration:underline;cursor:pointer;padding:8px}
+
+dialog{border:0;border-radius:14px;padding:20px;width:min(92vw,380px);background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.err{color:var(--red);min-height:1.3em;margin:8px 0 0;font-size:.92rem}
+.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:var(--accent);color:var(--accent-ink);padding:10px 16px;border-radius:10px;font-weight:600;z-index:10;max-width:90vw}
+@media (prefers-reduced-motion:no-preference){ .toast{animation:pop .18s ease-out} @keyframes pop{from{opacity:0;transform:translate(-50%,8px)}} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <h1>Umeme wa Vyumba</h1>
+    <p class="muted" id="priceLine">Matumizi, malipo na salio la kila chumba</p>
+  </header>
+
+  <!-- HOME -->
+  <section id="v-home" class="view">
+    <button class="big primary" data-go="mine">
+      <span class="big-t">Matumizi yangu</span>
+      <span class="big-s">Angalia matumizi, malipo na salio la chumba chako</span>
+    </button>
+    <button class="big" data-go="all">
+      <span class="big-t">Matumizi ya wote</span>
+      <span class="big-s">Hali ya vyumba vyote: matumizi, salio na madeni</span>
+    </button>
+  </section>
+
+  <!-- MY USAGE -->
+  <section id="v-mine" class="view" hidden>
+    <button class="back" data-go="home">&larr; Rudi</button>
+    <h2>Matumizi yangu</h2>
+    <form id="mineForm">
+      <label for="roomInput">Namba ya chumba</label>
+      <div class="field-row">
+        <input id="roomInput" type="text" autocomplete="off" placeholder="mfano 3 au A2" required>
+        <button class="btn" type="submit">Angalia</button>
+      </div>
+    </form>
+    <div id="mineOut" aria-live="polite"></div>
+  </section>
+
+  <!-- ALL -->
+  <section id="v-all" class="view" hidden>
+    <button class="back" data-go="home">&larr; Rudi</button>
+    <h2>Matumizi ya wote</h2>
+    <div id="allOut" aria-live="polite"></div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="v-admin" class="view" hidden>
+    <button class="back" data-go="home">&larr; Rudi</button>
+    <h2>Msimamizi</h2>
+
+    <details class="panel" open>
+      <summary>Vikumbusho vya kutuma</summary>
+      <div class="body" id="reminders"></div>
+    </details>
+
+    <details class="panel" open>
+      <summary>Ongeza usomaji wa mita</summary>
+      <div class="body">
+        <form id="readingForm">
+          <label for="rdRoom">Chumba</label>
+          <select id="rdRoom" required></select>
+          <div class="two">
+            <div><label for="rdVal">Usomaji wa sasa</label><input id="rdVal" type="number" inputmode="decimal" step="any" min="0" required></div>
+            <div><label for="rdDate">Tarehe</label><input id="rdDate" type="date" required></div>
+          </div>
+          <p style="margin-top:12px"><button class="btn" type="submit">Hifadhi usomaji</button></p>
+        </form>
+      </div>
+    </details>
+
+    <details class="panel">
+      <summary>Ongeza malipo</summary>
+      <div class="body">
+        <form id="payForm">
+          <label for="pyRoom">Chumba</label>
+          <select id="pyRoom" required></select>
+          <div class="two">
+            <div><label for="pyAmt">Kiasi (TSh)</label><input id="pyAmt" type="number" inputmode="numeric" min="1" step="any" required></div>
+            <div><label for="pyDate">Tarehe</label><input id="pyDate" type="date" required></div>
+          </div>
+          <label for="pyNote">Maelezo (hiari)</label>
+          <input id="pyNote" type="text" placeholder="mfano M-Pesa, kumbukumbu ya muamala">
+          <p style="margin-top:12px"><button class="btn" type="submit">Hifadhi malipo</button></p>
+        </form>
+      </div>
+    </details>
+
+    <details class="panel">
+      <summary>Bei ya unit</summary>
+      <div class="body">
+        <form id="priceForm">
+          <label for="priceInput">Bei kwa unit moja (TSh)</label>
+          <input id="priceInput" type="number" inputmode="decimal" min="0" step="any" required>
+          <p class="muted" style="margin-top:6px">Gawanya kiasi ulicholipa LUKU kwa units ulizopata.</p>
+          <p style="margin-top:12px"><button class="btn" type="submit">Hifadhi bei</button></p>
+        </form>
+      </div>
+    </details>
+
+    <details class="panel">
+      <summary>Ongeza au hariri chumba</summary>
+      <div class="body">
+        <form id="roomForm">
+          <label for="edRoom">Hariri chumba kilichopo</label>
+          <select id="edRoom"></select>
+          <label for="rmNo">Namba ya chumba</label>
+          <input id="rmNo" type="text" autocomplete="off" required>
+          <label for="rmName">Jina la mpangaji</label>
+          <input id="rmName" type="text" required>
+          <label for="rmPhone">Namba ya simu (haionekani kwa wapangaji)</label>
+          <input id="rmPhone" type="tel" inputmode="tel" placeholder="0712345678">
+          <div class="two">
+            <div><label for="rmStart">Usomaji wa kuanzia</label><input id="rmStart" type="number" inputmode="decimal" step="any" min="0" required></div>
+            <div><label for="rmStartDate">Tarehe ya kuanzia</label><input id="rmStartDate" type="date" required></div>
+          </div>
+          <p style="margin-top:12px"><button class="btn" type="submit">Hifadhi chumba</button></p>
+        </form>
+      </div>
+    </details>
+
+    <details class="panel">
+      <summary>Badilisha nenosiri</summary>
+      <div class="body">
+        <form id="pwForm">
+          <label for="newPw">Nenosiri jipya</label>
+          <input id="newPw" type="password" autocomplete="new-password" required>
+          <p style="margin-top:12px"><button class="btn" type="submit">Badilisha nenosiri</button></p>
+        </form>
+      </div>
+    </details>
+
+    <details class="panel">
+      <summary>Rekodi za hivi karibuni</summary>
+      <div class="body" id="recent"></div>
+    </details>
+  </section>
+</div>
+
+<div class="foot">
+  <button class="link" id="adminBtn">Msimamizi</button>
+  <button class="link" id="logoutBtn" hidden>Toka</button>
+</div>
+
+<dialog id="loginDlg">
+  <form id="loginForm">
+    <h2 id="loginTitle" style="margin-top:0">Ingia kama msimamizi</h2>
+    <label for="pw">Nenosiri</label>
+    <input id="pw" type="password" autocomplete="current-password" required>
+    <p class="err" id="loginErr" role="alert"></p>
+    <div class="field-row" style="margin-top:6px">
+      <button class="btn" type="submit" id="loginGo">Ingia</button>
+      <button class="btn ghost" type="button" id="loginCancel">Ghairi</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query, where, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCV6u_HNpJ2LCXTPfWgk_pDMAv4NePrBKk",
+  authDomain: "vetalongido-sims.firebaseapp.com",
+  projectId: "vetalongido-sims",
+  storageBucket: "vetalongido-sims.appspot.com",
+  messagingSenderId: "673093215287",
+  appId: "1:673093215287:web:5a94e49d56597ed9cacbb2",
+  measurementId: "G-DNDSFQEQ54"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const money = n => "TSh " + Math.round(Math.abs(n)).toLocaleString("en-US");
+const num = n => (Math.round(n * 10) / 10).toLocaleString("en-US");
+const MONTHS = ["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ago","Sep","Okt","Nov","Des"];
+const fmtDate = s => { if (!s) return "-"; const [y, m, d] = s.split("-"); return `${+d} ${MONTHS[+m - 1]} ${y}`; };
+const todayStr = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 864e5);
+const normId = s => String(s).trim().toUpperCase().replace(/[\/\s]+/g, "-");
+const naturalSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+
+let toastTimer;
+function toast(msg) {
+  document.querySelector(".toast")?.remove();
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg; t.setAttribute("role", "status");
+  document.body.appendChild(t);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.remove(), 2600);
+}
+function errMsg(e) {
+  if (e?.code === "permission-denied") return "Huna ruhusa. Angalia Firestore Rules.";
+  if (e?.code === "unavailable") return "Hakuna mtandao. Jaribu tena.";
+  return "Imeshindikana: " + (e?.message || "hitilafu isiyojulikana");
+}
+
+/* ---------- state + calculations ---------- */
+const state = { rooms: [], readings: [], payments: [], contacts: {}, price: 0, admin: false };
+
+async function loadData({ withContacts = false } = {}) {
+  const [r, rd, py, st] = await Promise.all([
+    getDocs(collection(db, "rooms")), getDocs(collection(db, "readings")),
+    getDocs(collection(db, "payments")), getDoc(doc(db, "settings", "main"))
+  ]);
+  state.rooms = r.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => naturalSort(a.id, b.id));
+  state.readings = rd.docs.map(d => ({ id: d.id, ...d.data() }));
+  state.payments = py.docs.map(d => ({ id: d.id, ...d.data() }));
+  state.price = st.exists() ? Number(st.data().pricePerUnit) || 0 : 0;
+  if (withContacts) {
+    const c = await getDocs(collection(db, "contacts"));
+    state.contacts = Object.fromEntries(c.docs.map(d => [d.id, d.data().phone]));
+  }
+}
+
+function calc(room, readings, payments, price) {
+  const mine = readings.filter(r => r.roomId === room.id).sort((a, b) => a.reading - b.reading);
+  const start = Number(room.startReading) || 0;
+  const last = mine.length ? mine[mine.length - 1] : null;
+  const latest = last ? Math.max(last.reading, start) : start;
+  const latestDate = last ? last.date : room.startDate;
+  const units = Math.max(0, latest - start);
+  const cost = units * price;
+  const myPays = payments.filter(p => p.roomId === room.id).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const paid = myPays.reduce((s, p) => s + Number(p.amount || 0), 0);
+  const balance = paid - cost;
+  const days = room.startDate && latestDate ? daysBetween(room.startDate, latestDate) : 0;
+  const perDay = days >= 1 ? units / days : null;
+  const dailyCost = perDay != null ? perDay * price : null;
+  const daysLeft = balance > 0 && dailyCost > 0 ? balance / dailyCost : null;
+  let status = "ok";
+  if (balance < 0) status = "deni";
+  else if ((units > 0 && balance === 0) || (daysLeft != null && daysLeft <= 3)) status = "low";
+  return { room, mine, myPays, start, latest, latestDate, units, cost, paid, balance, perDay, daysLeft, status };
+}
+
+function statusText(c) {
+  if (c.status === "deni") return "Una deni. Tafadhali lipa.";
+  if (c.status === "low") return c.daysLeft ? `Salio linaisha baada ya takribani siku ${Math.max(1, Math.ceil(c.daysLeft))}. Lipa mapema.` : "Salio limeisha. Tafadhali lipa.";
+  if (c.daysLeft) return `Salio linatosha takribani siku ${Math.floor(c.daysLeft)}.`;
+  return "Huna deni.";
+}
+const priceNotice = () => state.price > 0 ? "" :
+  `<div class="notice">Bei ya unit bado haijawekwa. Gharama zitaonekana baada ya msimamizi kuiweka.</div>`;
+
+/* ---------- navigation ---------- */
+function go(name) {
+  document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "v-" + name);
+  window.scrollTo(0, 0);
+  if (name === "all") loadAll();
+  if (name === "admin") refreshAdmin();
+  if (name === "mine") $("#roomInput").focus();
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-go]");
+  if (b) go(b.dataset.go);
+});
+
+/* ---------- tenant: my usage ---------- */
+$("#mineForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const raw = $("#roomInput").value;
+  const id = normId(raw);
+  const out = $("#mineOut");
+  out.innerHTML = `<p class="empty">Inapakia...</p>`;
+  try {
+    const rs = await getDoc(doc(db, "rooms", id));
+    if (!rs.exists()) { out.innerHTML = `<div class="notice">Chumba "${esc(raw)}" hakipatikani. Hakikisha namba kisha jaribu tena.</div>`; return; }
+    const [rd, py, st] = await Promise.all([
+      getDocs(query(collection(db, "readings"), where("roomId", "==", id))),
+      getDocs(query(collection(db, "payments"), where("roomId", "==", id))),
+      getDoc(doc(db, "settings", "main"))
+    ]);
+    state.price = st.exists() ? Number(st.data().pricePerUnit) || 0 : 0;
+    const room = { id, ...rs.data() };
+    const c = calc(room, rd.docs.map(d => d.data()).map((d, i) => ({ ...d, roomId: id })), py.docs.map(d => ({ ...d.data(), roomId: id })), state.price);
+    out.innerHTML = renderMine(c);
+  } catch (err) { out.innerHTML = `<div class="notice">${esc(errMsg(err))}</div>`; }
+});
+
+function renderMine(c) {
+  let prev = c.start;
+  const rows = c.mine.map(r => { const u = r.reading - prev; prev = r.reading; return { ...r, u }; }).reverse().slice(0, 8);
+  return `
+    ${priceNotice()}
+    <div style="margin-top:16px">
+      ${lcd(c)}
+      <p class="status ${c.status}">${esc(statusText(c))}</p>
+    </div>
+    <div class="card">
+      <div class="kv"><span>Chumba</span><b>${esc(c.room.id)}</b></div>
+      <div class="kv"><span>Mpangaji</span><b>${esc(c.room.name)}</b></div>
+      <div class="kv"><span>Usomaji wa kuanzia (${fmtDate(c.room.startDate)})</span><b>${num(c.start)}</b></div>
+      <div class="kv"><span>Usomaji wa sasa (${fmtDate(c.latestDate)})</span><b>${num(c.latest)}</b></div>
+      <div class="kv"><span>Units ulizotumia</span><b>${num(c.units)}</b></div>
+      <div class="kv"><span>Bei kwa unit</span><b>${money(state.price)}</b></div>
+      <div class="kv"><span>Gharama ya matumizi</span><b>${money(c.cost)}</b></div>
+      <div class="kv"><span>Jumla uliyolipa</span><b>${money(c.paid)}</b></div>
+    </div>
+    <h3>Usomaji wa hivi karibuni</h3>
+    <div class="card">${rows.length ? rows.map(r => `<div class="hist"><span class="d">${fmtDate(r.date)}</span><span>${num(r.reading)}</span><b>+${num(r.u)} unit</b></div>`).join("") : `<p class="empty">Bado hakuna usomaji mpya.</p>`}</div>
+    <h3>Malipo yako</h3>
+    <div class="card">${c.myPays.length ? c.myPays.slice(0, 8).map(p => `<div class="hist"><span class="d">${fmtDate(p.date)}</span><span>${esc(p.note || "")}</span><b>${money(p.amount)}</b></div>`).join("") : `<p class="empty">Bado hakuna malipo.</p>`}</div>`;
+}
+
+function lcd(c) {
+  const neg = c.balance < 0;
+  return `<div class="lcd" role="img" aria-label="${neg ? "Deni" : "Salio"} ${money(c.balance)}">
+    <span class="lcd-label">${neg ? "Deni" : "Salio"}</span>
+    <span class="lcd-value">${neg ? "-" : ""}${Math.round(Math.abs(c.balance)).toLocaleString("en-US")}</span>
+    <span class="lcd-unit">TSh</span></div>`;
+}
+
+/* ---------- everyone ---------- */
+async function loadAll() {
+  const out = $("#allOut");
+  out.innerHTML = `<p class="empty">Inapakia...</p>`;
+  try {
+    await loadData();
+    const calcs = state.rooms.map(r => calc(r, state.readings, state.payments, state.price));
+    if (!calcs.length) { out.innerHTML = `<p class="empty">Bado hakuna vyumba vilivyoongezwa.</p>`; return; }
+    calcs.sort((a, b) => a.balance - b.balance);
+    const totalUnits = calcs.reduce((s, c) => s + c.units, 0);
+    const totalDebt = calcs.filter(c => c.balance < 0).reduce((s, c) => s - c.balance, 0);
+    const debtors = calcs.filter(c => c.balance < 0).length;
+    out.innerHTML = `${priceNotice()}
+      <div class="sum">
+        <div><b>${num(totalUnits)}</b><span>Units zote</span></div>
+        <div><b>${money(totalDebt)}</b><span>Madeni yote</span></div>
+        <div><b>${debtors}</b><span>Wenye deni</span></div>
+      </div>
+      <p class="muted" style="margin:10px 0 14px">Bei: ${money(state.price)} kwa unit. Wenye deni wanaonekana kwanza.</p>
+      ${calcs.map(c => `
+        <div class="room ${c.status}">
+          <div class="room-top"><strong>Chumba ${esc(c.room.id)}</strong><span class="room-bal">${c.balance < 0 ? "-" : ""}${money(c.balance)}</span></div>
+          <div class="room-name">${esc(c.room.name)}</div>
+          <div class="room-grid">
+            <div><b>${num(c.units)}</b><span>Units</span></div>
+            <div><b>${money(c.cost)}</b><span>Gharama</span></div>
+            <div><b>${money(c.paid)}</b><span>Amelipa</span></div>
+          </div>
+          <div class="room-flag" style="color:var(--${c.status === "deni" ? "red" : c.status === "low" ? "amber" : "green"})">${c.balance < 0 ? "Deni" : "Salio"}${c.status === "low" ? ": linaisha hivi karibuni" : ""}</div>
+        </div>`).join("")}`;
+  } catch (err) { out.innerHTML = `<div class="notice">${esc(errMsg(err))}</div>`; }
+}
+
+/* ---------- admin: login (password hash kept in Firestore) ---------- */
+const sha256 = async t => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)))]
+  .map(x => x.toString(16).padStart(2, "0")).join("");
+const adminRef = doc(db, "settings", "admin");
+function setAdmin(on) {
+  state.admin = on;
+  try { on ? sessionStorage.setItem("adm", "1") : sessionStorage.removeItem("adm"); } catch {}
+  $("#adminBtn").textContent = on ? "Fungua paneli" : "Msimamizi";
+  $("#logoutBtn").hidden = !on;
+  if (!on && !$("#v-admin").hidden) go("home");
+}
+try { if (sessionStorage.getItem("adm") === "1") setAdmin(true); } catch {}
+
+const dlg = $("#loginDlg");
+let firstTime = false;
+$("#adminBtn").addEventListener("click", async () => {
+  if (state.admin) return go("admin");
+  $("#loginErr").textContent = "";
+  try { firstTime = !(await getDoc(adminRef)).exists(); } catch { firstTime = false; }
+  $("#loginTitle").textContent = firstTime ? "Weka nenosiri la msimamizi" : "Ingia kama msimamizi";
+  $("#loginGo").textContent = firstTime ? "Hifadhi na uingie" : "Ingia";
+  dlg.showModal(); $("#pw").focus();
+});
+$("#loginCancel").addEventListener("click", () => dlg.close());
+$("#logoutBtn").addEventListener("click", () => { setAdmin(false); toast("Umetoka"); go("home"); });
+$("#loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = $("#loginGo"); btn.disabled = true; $("#loginErr").textContent = "";
+  try {
+    const h = await sha256($("#pw").value);
+    if (firstTime) await setDoc(adminRef, { passHash: h });
+    else {
+      const snap = await getDoc(adminRef);
+      if (!snap.exists() || snap.data().passHash !== h) { $("#loginErr").textContent = "Nenosiri si sahihi."; return; }
+    }
+    $("#pw").value = ""; dlg.close(); setAdmin(true); go("admin");
+  } catch (err) { $("#loginErr").textContent = errMsg(err); }
+  finally { btn.disabled = false; }
+});
+$("#pwForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const v = $("#newPw").value;
+  if (v.length < 4) { toast("Nenosiri liwe na herufi 4 au zaidi"); return; }
+  if (await guarded(async () => setDoc(adminRef, { passHash: await sha256(v) }), "Nenosiri limebadilishwa")) $("#newPw").value = "";
+});
+
+/* ---------- admin: data + rendering ---------- */
+async function refreshAdmin() {
+  try { await loadData({ withContacts: true }); } catch (err) { toast(errMsg(err)); return; }
+  const opts = state.rooms.map(r => `<option value="${esc(r.id)}">Chumba ${esc(r.id)} - ${esc(r.name)}</option>`).join("");
+  const none = `<option value="" disabled selected>Chagua chumba</option>`;
+  ["#rdRoom", "#pyRoom"].forEach(s => { const keep = $(s).value; $(s).innerHTML = none + opts; if (keep) $(s).value = keep; });
+  $("#edRoom").innerHTML = `<option value="">Chumba kipya</option>` + opts;
+  $("#priceInput").value = state.price || "";
+  if (!$("#rdDate").value) $("#rdDate").value = todayStr();
+  if (!$("#pyDate").value) $("#pyDate").value = todayStr();
+  if (!$("#rmStartDate").value) $("#rmStartDate").value = todayStr();
+  renderReminders(); renderRecent();
+}
+
+function waLink(phone, msg) {
+  let p = String(phone || "").replace(/\D/g, "");
+  if (p.startsWith("0")) p = "255" + p.slice(1);
+  else if (p.length === 9) p = "255" + p;
+  return `https://wa.me/${p}?text=${encodeURIComponent(msg)}`;
+}
+function renderReminders() {
+  const list = state.rooms.map(r => calc(r, state.readings, state.payments, state.price)).filter(c => c.status !== "ok");
+  $("#reminders").innerHTML = list.length ? list.map(c => {
+    const msg = c.status === "deni"
+      ? `Habari ${c.room.name}, chumba ${c.room.id}: una deni la umeme ${money(c.balance)}. Tafadhali lipa leo.`
+      : `Habari ${c.room.name}, chumba ${c.room.id}: salio lako la umeme ${c.daysLeft ? "litaisha baada ya takribani siku " + Math.max(1, Math.ceil(c.daysLeft)) : "limeisha"}. Tafadhali lipa mapema.`;
+    const phone = state.contacts[c.room.id];
+    return `<div class="rem"><div><b>Chumba ${esc(c.room.id)}</b> <span class="muted">${esc(c.room.name)}</span><br>
+      <span class="room-flag" style="color:var(--${c.status === "deni" ? "red" : "amber"})">${c.balance < 0 ? "Deni " : "Salio "}${money(c.balance)}</span></div>
+      ${phone ? `<a class="btn wa small" target="_blank" rel="noopener" href="${waLink(phone, msg)}">Kumbusha</a>` : `<span class="muted">Hakuna simu</span>`}</div>`;
+  }).join("") : `<p class="empty">Hakuna anayehitaji kukumbushwa sasa.</p>`;
+}
+function renderRecent() {
+  const items = [
+    ...state.readings.map(r => ({ kind: "readings", id: r.id, date: r.date, roomId: r.roomId, text: `Usomaji ${num(r.reading)}` })),
+    ...state.payments.map(p => ({ kind: "payments", id: p.id, date: p.date, roomId: p.roomId, text: `Malipo ${money(p.amount)}${p.note ? " (" + esc(p.note) + ")" : ""}` }))
+  ].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 15);
+  $("#recent").innerHTML = items.length ? items.map(i => `<div class="rec"><div><b>Chumba ${esc(i.roomId)}</b> - ${i.text}<br><span class="muted">${fmtDate(i.date)}</span></div>
+    <button class="btn danger small" data-del="${i.kind}/${i.id}">Futa</button></div>`).join("") : `<p class="empty">Bado hakuna rekodi.</p>`;
+}
+
+/* ---------- admin: actions ---------- */
+async function guarded(fn, okMsg) {
+  try { await fn(); toast(okMsg); await refreshAdmin(); return true; }
+  catch (err) { toast(errMsg(err)); return false; }
+}
+
+$("#readingForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const roomId = $("#rdRoom").value, reading = Number($("#rdVal").value), date = $("#rdDate").value;
+  const c = calc(state.rooms.find(r => r.id === roomId), state.readings, state.payments, state.price);
+  if (reading < c.latest && !confirm(`Usomaji huu (${num(reading)}) ni mdogo kuliko wa mwisho (${num(c.latest)}). Uhifadhi hata hivyo?`)) return;
+  if (await guarded(() => addDoc(collection(db, "readings"), { roomId, reading, date, createdAt: serverTimestamp() }), "Usomaji umehifadhiwa")) $("#rdVal").value = "";
+});
+
+$("#payForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const roomId = $("#pyRoom").value, amount = Number($("#pyAmt").value), date = $("#pyDate").value, note = $("#pyNote").value.trim();
+  if (await guarded(() => addDoc(collection(db, "payments"), { roomId, amount, date, note, createdAt: serverTimestamp() }), "Malipo yamehifadhiwa")) { $("#pyAmt").value = ""; $("#pyNote").value = ""; }
+});
+
+$("#priceForm").addEventListener("submit", e => {
+  e.preventDefault();
+  guarded(() => setDoc(doc(db, "settings", "main"), { pricePerUnit: Number($("#priceInput").value) }, { merge: true }), "Bei imehifadhiwa");
+});
+
+$("#edRoom").addEventListener("change", () => {
+  const r = state.rooms.find(x => x.id === $("#edRoom").value);
+  $("#rmNo").value = r ? r.id : ""; $("#rmName").value = r ? r.name : "";
+  $("#rmPhone").value = r ? (state.contacts[r.id] || "") : "";
+  $("#rmStart").value = r ? r.startReading : ""; $("#rmStartDate").value = r ? r.startDate : todayStr();
+  $("#rmNo").readOnly = !!r;
+});
+$("#roomForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const id = normId($("#rmNo").value);
+  const data = { name: $("#rmName").value.trim(), startReading: Number($("#rmStart").value), startDate: $("#rmStartDate").value };
+  const ok = await guarded(async () => {
+    await setDoc(doc(db, "rooms", id), data);
+    await setDoc(doc(db, "contacts", id), { phone: $("#rmPhone").value.trim() });
+  }, "Chumba kimehifadhiwa");
+  if (ok) { e.target.reset(); $("#rmNo").readOnly = false; $("#rmStartDate").value = todayStr(); }
+});
+
+$("#recent").addEventListener("click", e => {
+  const b = e.target.closest("[data-del]"); if (!b) return;
+  if (!confirm("Futa rekodi hii?")) return;
+  const [coll, id] = b.dataset.del.split("/");
+  guarded(() => deleteDoc(doc(db, coll, id)), "Rekodi imefutwa");
+});
+
+/* ---------- start ---------- */
+getDoc(doc(db, "settings", "main")).then(s => {
+  if (s.exists() && Number(s.data().pricePerUnit) > 0) $("#priceLine").textContent = `Bei ya sasa: ${money(Number(s.data().pricePerUnit))} kwa unit`;
+}).catch(() => {});
+</script>
+</body>
+</html>
