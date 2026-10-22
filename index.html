@@ -75,7 +75,7 @@ input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--
 .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 4px}
 .sum div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
 .sum b{display:block;font-size:1.15rem}
-.sum span{font-size:.8rem;color:var(--muted)}
+.sum span{display:block;font-size:.8rem;color:var(--muted)}
 
 .room{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--green);border-radius:12px;padding:12px 14px;margin-bottom:10px}
 .room.deni{border-left-color:var(--red)} .room.low{border-left-color:var(--amber)}
@@ -284,6 +284,7 @@ const db = getFirestore(app);
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const money = n => "TSh " + Math.round(Math.abs(n)).toLocaleString("en-US");
+const priceFmt = n => "TSh " + Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const num = n => (Math.round(n * 10) / 10).toLocaleString("en-US");
 const MONTHS = ["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ago","Sep","Okt","Nov","Des"];
 const fmtDate = s => { if (!s) return "-"; const [y, m, d] = s.split("-"); return `${+d} ${MONTHS[+m - 1]} ${y}`; };
@@ -351,6 +352,7 @@ function statusText(c) {
   if (c.daysLeft) return `Salio linatosha takribani siku ${Math.floor(c.daysLeft)}.`;
   return "Huna deni.";
 }
+const debtUnits = c => (c.balance < 0 && state.price > 0) ? -c.balance / state.price : 0;
 const priceNotice = () => state.price > 0 ? "" :
   `<div class="notice">Bei ya unit bado haijawekwa. Gharama zitaonekana baada ya msimamizi kuiweka.</div>`;
 
@@ -404,9 +406,10 @@ function renderMine(c) {
       <div class="kv"><span>Usomaji wa kuanzia (${fmtDate(c.room.startDate)})</span><b>${num(c.start)}</b></div>
       <div class="kv"><span>Usomaji wa sasa (${fmtDate(c.latestDate)})</span><b>${num(c.latest)}</b></div>
       <div class="kv"><span>Units ulizotumia</span><b>${num(c.units)}</b></div>
-      <div class="kv"><span>Bei kwa unit</span><b>${money(state.price)}</b></div>
+      <div class="kv"><span>Bei kwa unit</span><b>${priceFmt(state.price)}</b></div>
       <div class="kv"><span>Gharama ya matumizi</span><b>${money(c.cost)}</b></div>
       <div class="kv"><span>Jumla uliyolipa</span><b>${money(c.paid)}</b></div>
+      ${c.balance < 0 ? `<div class="kv"><span>Deni kwa units</span><b>${num(debtUnits(c))}</b></div>` : ""}
     </div>
     <h3>Usomaji wa hivi karibuni</h3>
     <div class="card">${rows.length ? rows.map(r => `<div class="hist"><span class="d">${fmtDate(r.date)}</span><span>${num(r.reading)}</span><b>+${num(r.u)} unit</b></div>`).join("") : `<p class="empty">Bado hakuna usomaji mpya.</p>`}</div>
@@ -416,8 +419,8 @@ function renderMine(c) {
 
 function lcd(c) {
   const neg = c.balance < 0;
-  return `<div class="lcd" role="img" aria-label="${neg ? "Deni" : "Salio"} ${money(c.balance)}">
-    <span class="lcd-label">${neg ? "Deni" : "Salio"}</span>
+  return `<div class="lcd" role="img" aria-label="${neg ? "Deni" : "Salio"} ${money(c.balance)}${neg ? ", unit " + num(debtUnits(c)) : ""}">
+    <span class="lcd-label">${neg ? "Deni (unit " + num(debtUnits(c)) + ")" : "Salio"}</span>
     <span class="lcd-value">${neg ? "-" : ""}${Math.round(Math.abs(c.balance)).toLocaleString("en-US")}</span>
     <span class="lcd-unit">TSh</span></div>`;
 }
@@ -434,13 +437,14 @@ async function loadAll() {
     const totalUnits = calcs.reduce((s, c) => s + c.units, 0);
     const totalDebt = calcs.filter(c => c.balance < 0).reduce((s, c) => s - c.balance, 0);
     const debtors = calcs.filter(c => c.balance < 0).length;
+    const totalDebtUnits = calcs.reduce((s, c) => s + debtUnits(c), 0);
     out.innerHTML = `${priceNotice()}
       <div class="sum">
         <div><b>${num(totalUnits)}</b><span>Units zote</span></div>
-        <div><b>${money(totalDebt)}</b><span>Madeni yote</span></div>
+        <div><b>${money(totalDebt)}</b><span>Madeni yote</span><span>Unit ${num(totalDebtUnits)}</span></div>
         <div><b>${debtors}</b><span>Wenye deni</span></div>
       </div>
-      <p class="muted" style="margin:10px 0 14px">Bei: ${money(state.price)} kwa unit. Wenye deni wanaonekana kwanza.</p>
+      <p class="muted" style="margin:10px 0 14px">Bei: ${priceFmt(state.price)} kwa unit. Wenye deni wanaonekana kwanza.</p>
       ${calcs.map(c => `
         <div class="room ${c.status}">
           <div class="room-top"><strong>Chumba ${esc(c.room.id)}</strong><span class="room-bal">${c.balance < 0 ? "-" : ""}${money(c.balance)}</span></div>
@@ -450,7 +454,7 @@ async function loadAll() {
             <div><b>${money(c.cost)}</b><span>Gharama</span></div>
             <div><b>${money(c.paid)}</b><span>Amelipa</span></div>
           </div>
-          <div class="room-flag" style="color:var(--${c.status === "deni" ? "red" : c.status === "low" ? "amber" : "green"})">${c.balance < 0 ? "Deni" : "Salio"}${c.status === "low" ? ": linaisha hivi karibuni" : ""}</div>
+          <div class="room-flag" style="color:var(--${c.status === "deni" ? "red" : c.status === "low" ? "amber" : "green"})">${c.balance < 0 ? "Deni: unit " + num(debtUnits(c)) : "Salio"}${c.status === "low" ? ": linaisha hivi karibuni" : ""}</div>
         </div>`).join("")}`;
   } catch (err) { out.innerHTML = `<div class="notice">${esc(errMsg(err))}</div>`; }
 }
@@ -525,7 +529,7 @@ function renderReminders() {
   const list = state.rooms.map(r => calc(r, state.readings, state.payments, state.price)).filter(c => c.status !== "ok");
   $("#reminders").innerHTML = list.length ? list.map(c => {
     const msg = c.status === "deni"
-      ? `Habari ${c.room.name}, chumba ${c.room.id}: una deni la umeme ${money(c.balance)}. Tafadhali lipa leo.`
+      ? `Habari ${c.room.name}, chumba ${c.room.id}: una deni la umeme ${money(c.balance)} (unit ${num(debtUnits(c))}). Tafadhali lipa leo.`
       : `Habari ${c.room.name}, chumba ${c.room.id}: salio lako la umeme ${c.daysLeft ? "litaisha baada ya takribani siku " + Math.max(1, Math.ceil(c.daysLeft)) : "limeisha"}. Tafadhali lipa mapema.`;
     const phone = state.contacts[c.room.id];
     return `<div class="rem"><div><b>Chumba ${esc(c.room.id)}</b> <span class="muted">${esc(c.room.name)}</span><br>
@@ -594,7 +598,7 @@ $("#recent").addEventListener("click", e => {
 
 /* ---------- start ---------- */
 getDoc(doc(db, "settings", "main")).then(s => {
-  if (s.exists() && Number(s.data().pricePerUnit) > 0) $("#priceLine").textContent = `Bei ya sasa: ${money(Number(s.data().pricePerUnit))} kwa unit`;
+  if (s.exists() && Number(s.data().pricePerUnit) > 0) $("#priceLine").textContent = `Bei ya sasa: ${priceFmt(Number(s.data().pricePerUnit))} kwa unit`;
 }).catch(() => {});
 </script>
 </body>
